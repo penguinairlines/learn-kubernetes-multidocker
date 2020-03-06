@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t penguinairlines/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run penguinairlines/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t penguinairlines/multi-client ./client
+  - docker build -t penguinairlines/multi-nginx ./nginx
+  - docker build -t penguinairlines/multi-server ./server
+  - docker build -t penguinairlines/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push penguinairlines/multi-client
+  - docker push penguinairlines/multi-nginx
+  - docker push penguinairlines/multi-server
+  - docker push penguinairlines/multi-worker
